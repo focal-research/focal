@@ -1,0 +1,7 @@
+This is the FOCAL formalization in Coq.
+This is written and tested with Coq 8.4pl1, but Coq 8.4 and later should be
+able to compile it.
+To make, simply type make clean; make.
+Note that the standard UNIX tool make is expected.
+You will see several warnings that Coq "could not define graph(s)."
+These are normal and expected, and only indicate that Coq could not automatically generate certain induction schema.
