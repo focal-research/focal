@@ -253,11 +253,6 @@ Fixpoint B_modelsAll (B : belief_model) (w : B_W B)
                                   B_worldview B p w v phi <->
                                   B_worldview B p w v (Says tau phi).
 
-  Axiom B_worldview_contains : forall (B : belief_model) (p : B_P B)
-                                      (phi : formula),
-                                 (forall (w : B_W B) (v : var -> D (B_s B w)), B_models B w v phi) ->
-                                 forall (w : B_W B) (v : var -> D (B_s B w)), B_worldview B p w v phi.
-
   Axiom B_worldview_cond1 : forall (B : belief_model) (p : B_P B)
                                    (w : B_W B) (v : var -> D (B_s B w))
                                    (phi : formula) (x : var) (d : D (B_s B w)),
@@ -269,9 +264,14 @@ Fixpoint B_modelsAll (B : belief_model) (w : B_W B)
                                    (w : B_W B) (v : var -> D (B_s B w))
                                    (phi : formula) (x y : var) (d : D (B_s B w)),
                               ~ (is_true (notfree_in_formula x phi)) ->
-                              B_worldview B p w (B_subst_map B w v x d) phi ->
-                              is_true (notfree_in_formula y phi) ->
-                              B_worldview B p w (B_subst_map B w v y d) (subst x (Var_t y) phi).
+                              is_true (notfree_in_formula y phi) ->                              
+                              (B_worldview B p w (B_subst_map B w v x d) phi <->
+                              B_worldview B p w (B_subst_map B w v y d) (subst x (Var_t y) phi)).
+
+  Axiom non_principal : forall B : belief_model, B_P B.
+  Axiom non_principal_worldview : forall (B : belief_model) (w : B_W B) (v : var -> D (B_s B w)) (phi : formula),
+                                    B_worldview B (non_principal B) w v phi.
+
 
 End Belief.
 

@@ -341,6 +341,10 @@ Fixpoint modelsAll (M : focal_model) (w : W M) (v : var -> D (s M w)) (Gamma : l
 Axiom mu_pi_same : forall (M : focal_model) (w w' : W M) (v : var -> D (s M w)) (v' : var -> D (s M w')) (tau : term),
   p_Eq M (coerce_d_to_p M w (mu M w v tau)) (coerce_d_to_p M w' (mu M w' v' tau)).
 
+Axiom non_principal : forall (M : focal_model), P M.
+
+Axiom non_principal_A : forall (M : focal_model) (w w' : W M),
+                          ~(A M (non_principal M) w w').
 End Model.
 
   Hint Resolve ind_R ind_F : ModelTheory.
