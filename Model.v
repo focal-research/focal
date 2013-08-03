@@ -278,6 +278,48 @@ Axiom non_empty : forall (M : focal_model), exists w : W M, True.
   (*  witnesses a FOCALE formula. It is mutually recursive with both mu and world_d_Eq. *)
   (************************************************************************************)
 
+
+  Inductive iModels : forall (M : focal_model) (w : W M) (v : var -> D (s M w)), formula -> Prop :=
+    trueM : forall (M : focal_model) (w : W M) (v : var -> D (s M w)), iModels M w v FocalTrue
+  | relM : forall (M : focal_model) (w : W M) (v : var -> D (s M w)) (i : nat) (taus : list term),
+             R (s M w) i (map (fun x => mu M w v x) taus)
+             -> iModels M w v (Rel_f (Rel i) taus)
+  | eqM : forall (M : focal_model) (w : W M) (v : var -> D (s M w)) (tau tau' : term),
+            d_Eq (s M w) (mu M w v tau) (mu M w v tau')
+            -> iModels M w v (Eq tau tau')
+  | andM : forall (M : focal_model) (w : W M) (v : var -> D (s M w)) (phi psi : formula),
+            iModels M w v phi -> iModels M w v psi ->
+            iModels M w v (And phi psi)
+  | orM1 : forall (M : focal_model) (w : W M) (v : var -> D (s M w)) (phi psi : formula),
+             iModels M w v phi ->
+             iModels M w v (Or phi psi)
+  | orM2 : forall (M : focal_model) (w : W M) (v : var -> D (s M w)) (phi psi : formula),
+             iModels M w v psi ->
+             iModels M w v (Or phi psi)
+
+  | impM : forall (M : focal_model) (w : W M) (v : var -> D (s M w)) (phi psi : formula) (iModels' : forall (M : focal_model) (w : W M) (v : var -> D (s M w)), formula -> Prop),
+             (forall (w : W M) (v : var -> D (s M w)) (phi : formula), iModels' M w v phi -> iModels M w v phi) ->
+             (forall (w' : W M) (l : lt M w w'), iModels' M w' (extend_v M w w' l v) phi -> iModels' M w' (extend_v M w w' l v) psi) ->
+             iModels M w v (Implies phi psi)
+  | notM : forall (M : focal_model) (w : W M) (v : var -> D (s M w)) (phi : formula)(iModels' : forall (M : focal_model) (w : W M) (v : var -> D (s M w)), formula -> Prop), 
+             (iModels' M w v phi -> iModels M w v phi) ->
+             (iModels' M w v phi -> iModels' M w v FocalFalse) -> 
+             iModels M w v (Not phi)
+  | forallM : forall (M : focal_model) (w : W M) (v : var -> D (s M w)) (x : var) (phi : formula),
+                     (forall (w' : W M) (l : lt M w w') (d : D (s M w')), iModels M w' (subst_map M w' (extend_v M w w' l v) x d) phi) ->
+                     iModels M w v (Forall x phi)
+  | existsM : forall (M : focal_model) (w : W M) (v : var -> D (s M w)) (x : var) (phi : formula),
+                (exists (d : D (s M w)), iModels M w (subst_map M w v x d) phi) ->
+                iModels M w v (Exists x phi)
+  | saysM : forall (M : focal_model) (w : W M) (v : var -> D (s M w)) (tau : term) (phi : formula),
+              (forall (w' : W M) (l : lt M w w') (w'' : W M)(a : A M (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) tau)) w' w''),
+                 iModels M w'' (extend_v_A M w' w'' (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) tau)) a (extend_v M w w' l v)) phi) ->
+              iModels M w v (Says tau phi)
+  | speaksforM : forall (M : focal_model) (w : W M) (v : var -> D (s M w)) (tau tau' : term),
+                 (forall w' w'' : W M, restricted_A M (coerce_d_to_p M w (mu M w v tau')) w w' w'' -> restricted_A M (coerce_d_to_p M w (mu M w v tau)) w w' w'') ->
+                 iModels M w v (Speaksfor tau tau').
+             
+
   Fixpoint models (M : focal_model) (w : W M) (v : var -> D (s M w)) (phi : formula) {struct phi} : Prop := 
              match phi with
                (* True is always modeled. *)
@@ -325,6 +367,41 @@ let p2 : P M := (coerce_d_to_p M w (mu M w v tau2)) in
                  forall w' w'' : W M, restricted_A M p2 w w' w'' -> restricted_A M p1 w w' w''
              end.
 
+(*Theorem inductive_implies_fixpoint : forall (M : focal_model) (w : W M) (v : var -> D (s M w)) (phi : formula),
+                                       (forall (w : W M) (v : var -> D (s M w)) pmodels M w v phi -> iModels M w v phi) -> iModels M w v phi -> models M w v phi.
+Proof.
+  intros. induction H0.
+  (* Case FocalTrue *)
+    simpl; trivial.
+  (*Case Relation *)
+    simpl. exact H0.
+  (* Case Equality *)
+    simpl. exact H0.
+  (* Case And *)
+    simpl. split.
+    apply IHiModels1. intros. exact H0_.
+    apply IHiModels2. intros. exact H0_0.
+  (* Case Or1 *)
+    simpl. left. apply IHiModels. intro; exact H0.
+  (* Case Or2 *)
+    simpl. right. apply IHiModels. intro; exact H0.
+  (* Case Implies *)
+    simpl. intros.
+    apply H1. apply H2.
+  *)  
+
+(* Should be provable with inversion, however, 
+ * inversion gives me equality of some sigTs, and I can't figure out how to 
+ * get what I need from those. It should be simple, since the sigTs are
+ * just pairs, the projection functions should work. However,
+ * Coq's rewrite functionality is having problems.
+ *)
+(*
+Theorem models_equiv :  forall (M : focal_model) (w : W M) (v : var -> D (s M w)) (phi : formula),
+                         models M w v phi <-> iModels M w v phi.
+*)
+
+
 (* Extend the above to lists of formulas. *)
 Fixpoint modelsAll (M : focal_model) (w : W M) (v : var -> D (s M w)) (Gamma : list formula) : Prop := 
   match Gamma with 
@@ -332,19 +409,13 @@ Fixpoint modelsAll (M : focal_model) (w : W M) (v : var -> D (s M w)) (Gamma : l
     | phi :: Gamma' => models M w v phi /\ modelsAll M w v Gamma'
   end.
 
-(* The same term must always be interpreted as the same principal at any world. 
-   This is egregious as stated. However, it is used in a very controlled way.
-   In particular, ongoing work is to add the requirement that w' be reachable from w,
-   and add a notion of extending in the correct way. However, that is not yet done.
-   If it is done, then this should be provable.
-*)
-Axiom mu_pi_same : forall (M : focal_model) (w w' : W M) (v : var -> D (s M w)) (v' : var -> D (s M w')) (tau : term),
-  p_Eq M (coerce_d_to_p M w (mu M w v tau)) (coerce_d_to_p M w' (mu M w' v' tau)).
+                       
 
 Axiom non_principal : forall (M : focal_model), P M.
 
 Axiom non_principal_A : forall (M : focal_model) (w w' : W M),
                           ~(A M (non_principal M) w w').
+
 End Model.
 
   Hint Resolve ind_R ind_F : ModelTheory.

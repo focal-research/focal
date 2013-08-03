@@ -266,12 +266,18 @@ Proof.
       assert (exists w'' : W M, lt M w' w'' /\ A M (coerce_d_to_p M w (mu M w v p)) w'' u').
         apply F2 with (u := u). split.
         assert (p_Eq M (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) p)) (coerce_d_to_p M w (mu M w v p))).
-          apply mu_pi_same.
-        apply A_P_Eq with (p' := (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) p))). apply mu_pi_same;assumption. assumption. assumption.
+          apply p_Eq_symm; apply mu_pi_same.
+        apply A_P_Eq with (p' := (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) p))). apply mu_pi_same; assumption. assumption. assumption.
       destruct H2 as [w''].
       assert (exists w''' : W M, lt M w'' w'''/\ A M (coerce_d_to_p M w (mu M w v p)) w''' v'').
         apply A_Intuitive_Trans with (u := u'). split.
-        apply H2. apply A_P_Eq with (p := (coerce_d_to_p M u' (mu M u' (extend_v M u u' l0 (extend_v_A M w' u (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) p)) a (extend_v M w w' l v))) p))). apply mu_pi_same. apply a0.
+        apply H2. apply A_P_Eq with (p := (coerce_d_to_p M u' (mu M u' (extend_v M u u' l0 (extend_v_A M w' u (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) p)) a (extend_v M w w' l v))) p))). 
+        apply p_Eq_symm; apply p_Eq_trans with (p2 := coerce_d_to_p M u (mu M u 
+                                                                            (extend_v_A M w' u 
+                                                                                        (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) p)) 
+                                                                                        a (extend_v M w w' l v)) p)).
+        apply p_Eq_trans with (p2 := coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) p)).
+        apply mu_pi_same. apply mu_pi_same_A. apply mu_pi_same. apply a0.
       destruct H3 as [w'''].
       assert (lt M w w''').
         apply lt_trans with (w' := w'). assumption. apply lt_trans with (w' := w''). apply H2. apply H3.
@@ -280,7 +286,7 @@ Proof.
       assert (lt M w'' w'''). apply H3.
       assert (lt M w' w''). apply H2.
       assert (p_Eq M (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) p)) (coerce_d_to_p M w (mu M w v p))).
-        apply mu_pi_same.
+        apply p_Eq_symm; apply mu_pi_same.
       assert (A M (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) p)) w''' v'').
         apply A_P_Eq with (p := coerce_d_to_p M w (mu M w v p)) (p' := coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) p)). apply mu_pi_same.
         assumption.
@@ -297,7 +303,11 @@ Proof.
                                             (extend_v M w'' w''' H6
                                                (extend_v M w' w'' H7
                                                   (extend_v M w w' l v)))).
-      apply saysRI_v_same. apply mu_pi_same. apply mu_pi_same.
+      apply saysRI_v_same. apply p_Eq_symm; apply p_Eq_trans with (p2 := coerce_d_to_p M u (mu M u 
+                                                                            (extend_v_A M w' u 
+                                                                                        (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) p)) 
+                                                                                        a (extend_v M w w' l v)) p)). 
+      apply mu_pi_same_A. apply mu_pi_same. apply p_Eq_refl. 
       rewrite H10. 
     assert ((extend_v M w'' w''' H6 (extend_v M w' w'' H7 (extend_v M w w' l v))) = (extend_v M w w''' H4 v)).
       assert (lt M w w'').
@@ -308,10 +318,11 @@ Proof.
       rewrite H12. apply function_same. apply extend_v_idempotent.
     rewrite H11.
     assert (p_Eq M (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) p)) (coerce_d_to_p M w''' (mu M w''' (extend_v M w w''' H4 v) p))).
-      apply mu_pi_same.
+      apply p_Eq_trans with (p2 := coerce_d_to_p M w (mu M w v p)); [apply p_Eq_symm | idtac]; apply mu_pi_same.
     assert (A M (coerce_d_to_p M w''' (mu M w''' (extend_v M w w''' H4 v) p)) w''' v'').
       apply A_P_Eq with (p' := (coerce_d_to_p M w''' (mu M w''' (extend_v M w w''' H4 v) p))) (p := (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) p))).
-        apply mu_pi_same. assumption.
+        apply p_Eq_trans with (p2 := coerce_d_to_p M w (mu M w v p));
+        [apply p_Eq_symm | idtac]; apply mu_pi_same. assumption.
     assert (forall (y : var), d_Eq (s M v'') (extend_v_A M w''' v'' (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) p)) H9 (extend_v M w w''' H4 v) y) (extend_v_A M w''' v'' (coerce_d_to_p M w''' (mu M w''' (extend_v M w w''' H4 v) p)) H13 (extend_v M w w''' H4 v) y)).
       intros. apply extend_v_A_same. 
     apply modelsAll_d_Eq with (v' :=(extend_v_A M w''' v''
@@ -358,7 +369,17 @@ Proof.
           (extend_v M w''' w''' H8
              (extend_v_A M w'' w''' (coerce_d_to_p M w (mu M w v p)) H5
                 (extend_v M w' w'' H3 (extend_v M w w' l v)))) p))).
-      apply mu_pi_same; assumption. assumption.
+      apply p_Eq_trans with (p2 := coerce_d_to_p M  w''' (mu M w''' (extend_v_A M w'' w''' (coerce_d_to_p M w (mu M w v p)) H5
+                                                                                (extend_v M w' w'' H3 (extend_v M w w' l v))) p)).
+      apply p_Eq_trans with (p2 := coerce_d_to_p M w'' (mu M w'' (extend_v M w' w'' H3 (extend_v M w w' l v)) p)).
+      apply p_Eq_trans with (p2 := coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) p)).
+      apply mu_pi_same. apply mu_pi_same. apply mu_pi_same_A. 
+      assert ((extend_v M w''' w''' H8 (extend_v_A M w'' w''' (coerce_d_to_p M w (mu M w v p)) H5
+                                                   (extend_v M w' w'' H3 (extend_v M w w' l v))))
+              = (extend_v_A M w'' w''' (coerce_d_to_p M w (mu M w v p)) H5
+                            (extend_v M w' w'' H3 (extend_v M w w' l v)))).
+      apply function_same. symmetry; apply extend_v_self. rewrite H9. apply p_Eq_refl.
+      assumption. 
     apply models_v_d_Eq with (v := extend_v_A M w''' u (coerce_d_to_p M w'''
        (mu M w'''
           (extend_v M w''' w''' H8
@@ -393,9 +414,9 @@ Proof.
     assert (restricted_A M (coerce_d_to_p M w (mu M w v tau1)) w w' w'').
       assert (restricted_A M (coerce_d_to_p M w (mu M w v tau2)) w w' w''). split.
         assert (w' = w'). trivial. exists (lte M _ w w' w' l (eqw M _ w' w' H5)). trivial. split.
-        assert (w'' = w''). trivial. assert (A M (coerce_d_to_p M w (mu M w v tau2)) w' w''). apply A_P_Eq with (p := coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) tau2)). apply mu_pi_same. assumption.
+        assert (w'' = w''). trivial. assert (A M (coerce_d_to_p M w (mu M w v tau2)) w' w''). apply A_P_Eq with (p := coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) tau2)). apply p_Eq_symm; apply mu_pi_same. assumption.
         exists (lte M _ w w'' w' l (ltp M _ w' w'' w'' H6 (eqw M _ w'' w'' H5))). trivial.
-        apply A_P_Eq with (p := coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) tau2)). apply mu_pi_same; assumption. assumption.
+        apply A_P_Eq with (p := coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) tau2)). apply p_Eq_symm; apply mu_pi_same; assumption. assumption.
       apply H4. assumption.
     assert (models M w v (Says tau1 phi0)). apply H2; assumption.
     simpl in H6.

@@ -109,6 +109,7 @@ match tau' with
     end
 | Fun_t f taus => Fun_t f (map (subst_term x tau') taus)
 end.
+
 Fixpoint subst (x : var) (tau : term) (phi : formula) {struct phi} : formula :=
 match phi with
 | FocalTrue => FocalTrue

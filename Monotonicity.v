@@ -121,7 +121,7 @@ Theorem lt_monotonic : forall (phi : formula)(M : focal_model) (w : W M) (v : va
           destruct H2. clear H2.
           exists (con_symm M (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) t0)) w' w x). trivial.
         assumption.
-      apply restricted_A_P_Eq with (p := coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) t0)). apply mu_pi_same. assumption.
+      apply restricted_A_P_Eq with (p := coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) t0)). apply p_Eq_symm; apply mu_pi_same. assumption.
       apply H. assumption.
 Qed.
 

@@ -65,6 +65,24 @@ Axiom extend_v_subst : forall (M : focal_model) (w w' : W M) (l : lt M w w') (v 
 (extend_v M w w' l (subst_map M w v x d) variable) = (subst_map M w' (extend_v M w w' l v) x (extend_d_lt M w w' l d) variable).
 
 
+(* 
+The following two axioms are provable on pencil-and-paper by induction over
+tau and by using monotonicity. 
+They allow us to move up in worlds without changing our principal.
+*)
+Axiom mu_pi_same : forall (M : focal_model) (w w' : W M) (v : var -> D (s M w)) 
+                          (l : lt M w w') (tau : term),
+                     p_Eq M 
+                          (coerce_d_to_p M w (mu M w v tau)) 
+                          (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) tau)).
+
+Axiom mu_pi_same_A : forall (M : focal_model) (w w' : W M) (v : var -> D (s M w))
+                            (p : P M) (a : A M p w w') (tau : term),
+                       p_Eq M
+                            (coerce_d_to_p M w (mu M w v tau))
+                            (coerce_d_to_p M w' (mu M w' (extend_v_A M w w' p a v) tau)).
+
+
 (**********************************************************************************************************************)
 (* Some Lemmas, defitions, and Ltac related to connected proofs. These are used extensively below, but nowhere else   *)
 (*                                                     in the code.                                                   *)
@@ -325,6 +343,14 @@ Qed.
 (**********************************************************************************************************************)
 (*                   Some technical lemmas that we have proven to be true, at least modulo the above.                 *)
 (**********************************************************************************************************************)
+
+Lemma extend_v_self : forall (M : focal_model) (w : W M) (l : lt M w w)
+                             (v : var -> D (s M w)) (x : var),
+                        v x = extend_v M w w l v x.
+Proof.
+  intros; unfold extend_v.
+  rewrite extend_d_once. trivial.
+Qed.
 
 (* 
 This tells us that, since var_dec x x is always true, if var_dec x x then a else b will always evaluate to a. 
@@ -762,7 +788,9 @@ assert (p_Eq M (coerce_d_to_p M w''
                  tau))
                (coerce_d_to_p M w
                  (mu M w v tau))).
-  apply mu_pi_same.
+  apply p_Eq_trans with (p2 := (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) tau))).
+  apply p_Eq_symm. apply mu_pi_same_A.
+  apply p_Eq_symm. apply mu_pi_same.
 assert (restricted_A M (coerce_d_to_p M w'' (mu M w''
         (extend_v_A M w' w''
            (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) tau')) a
@@ -775,7 +803,9 @@ apply restricted_A_P_Eq with (p := (coerce_d_to_p M w''
              (extend_v_A M w' w''
                 (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) tau')) a
                 (extend_v M w w' l v)) tau'))).
-  apply mu_pi_same.
+  apply p_Eq_trans with (p2 := (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) tau'))).
+  apply p_Eq_symm. apply mu_pi_same_A.
+  apply p_Eq_symm. apply mu_pi_same.
 apply connected_connected with (w' := w'').
 assert (A M (coerce_d_to_p M w (mu M w v tau')) w' w'').
   apply A_P_Eq with (p' := coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) tau')).
@@ -788,12 +818,15 @@ exists (con_symm M _ w w''
            (gte M (coerce_d_to_p M w (mu M w v tau')) w' w w l
              (eqw M _ w w H3)))). trivial.
 apply connected_P_Eq with (p := coerce_d_to_p M w (mu M w v tau')).
-  apply mu_pi_same. exact H4.
+  apply p_Eq_trans with (p2 := (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) tau'))).
+  apply mu_pi_same. apply mu_pi_same_A.
+  exact H4.
 exact H0.
 apply H. exact H2.
 apply connected_connected with (w' := w).
 apply connected_P_Eq with (p := coerce_d_to_p M w (mu M w v tau)).
-  apply mu_pi_same.
+  apply p_Eq_trans with (p2 := (coerce_d_to_p M w' (mu M w' (extend_v M w w' l v) tau))).
+  apply mu_pi_same. apply mu_pi_same_A.
 assert (restricted_A M (coerce_d_to_p M w (mu M w v tau)) w w' w'').
 apply H. unfold restricted_A. split; [connected | split].
 assert (A M (coerce_d_to_p M w (mu M w v tau')) w' w'').
@@ -833,22 +866,29 @@ exact H2.
                (extend_v_A M u u'
                   (coerce_d_to_p M u (mu M u (extend_v M w u H2 v) tau')) H4
                   (extend_v M w u H2 v)) tau))).
-        apply mu_pi_same.
+        apply p_Eq_trans with (p2 := (coerce_d_to_p M u (mu M u (extend_v M w u H2 v) tau))); apply p_Eq_symm.
+        apply mu_pi_same_A. apply mu_pi_same.
         apply H.
         apply connected_restricted with (w := w). 
         assert (A M (coerce_d_to_p M u'
         (mu M u'
            (extend_v_A M u u'
               (coerce_d_to_p M u (mu M u (extend_v M w u H2 v) tau')) H4
-              (extend_v M w u H2 v)) tau')) u u'). apply A_P_Eq with (p := (coerce_d_to_p M w (mu M w v tau'))). apply mu_pi_same. assumption.
+              (extend_v M w u H2 v)) tau')) u u'). apply A_P_Eq with (p := (coerce_d_to_p M w (mu M w v tau'))). 
+        apply p_Eq_trans with (p2 := coerce_d_to_p M u (mu M u (extend_v M w u H2 v) tau')).
+        apply mu_pi_same. apply mu_pi_same_A.
+        assumption.
         assert (u' = u'). trivial.
         exists (lte M (coerce_d_to_p M u' (mu M u' (extend_v_A M u u' (coerce_d_to_p M u (mu M u (extend_v M w u H2 v) tau')) H4 (extend_v M w u H2 v)) tau')) w u' u H2 (ltp M _ u u' u' H5 (eqw M _ u' u' H6))). trivial.
-        apply restricted_A_P_Eq with (p := (coerce_d_to_p M w (mu M w v tau'))). apply mu_pi_same. assumption.
+        apply restricted_A_P_Eq with (p := (coerce_d_to_p M w (mu M w v tau'))). 
+        apply p_Eq_trans with (p2 := coerce_d_to_p M u (mu M u (extend_v M w u H2 v) tau')).
+        apply mu_pi_same. apply mu_pi_same_A. assumption.
     apply connected_restricted with (w := u').
       assert (A M (coerce_d_to_p M w (mu M w v tau)) u u').
         assert (A M (coerce_d_to_p M u (mu M u (extend_v M w u H2 v) tau')) u u'). apply A_P_Eq with (p := (coerce_d_to_p M w (mu M w v tau'))). apply mu_pi_same. assumption.
         assert (restricted_A M (coerce_d_to_p M u' (mu M u' (extend_v_A M u u' (coerce_d_to_p M u (mu M u (extend_v M w u H2 v) tau')) H5 (extend_v M w u H2 v)) tau')) u' u u').
-          apply restricted_A_P_Eq with (p := (coerce_d_to_p M u (mu M u (extend_v M w u H2 v) tau'))). apply mu_pi_same. unfold restricted_A. split.
+          apply restricted_A_P_Eq with (p := (coerce_d_to_p M u (mu M u (extend_v M w u H2 v) tau'))). 
+          apply mu_pi_same_A. unfold restricted_A. split.
           assert (u = u). trivial.
           exists (gtp M _ u' u u H5 (eqw M _ u u H6)). trivial.
           split. assert (u' = u'). trivial. exists (eqw M _ u' u' H6). trivial.
@@ -859,7 +899,9 @@ exact H2.
              (mu M u'
                 (extend_v_A M u u'
                    (coerce_d_to_p M u (mu M u (extend_v M w u H2 v) tau')) H5
-                   (extend_v M w u H2 v)) tau))). apply mu_pi_same. assumption.
+                   (extend_v M w u H2 v)) tau))). 
+        apply p_Eq_symm; apply p_Eq_trans with (p2 := coerce_d_to_p M u (mu M u (extend_v M w u H2 v) tau)).
+        apply mu_pi_same. apply mu_pi_same_A. assumption.
         assert (u' = u'). trivial.
         exists (con_symm M _  u' w (lte M _ w u' u H2 (ltp M _ u u' u' H5 (eqw M _ u' u' H6)))). trivial. assumption.
         apply handoff_necc with (p := (coerce_d_to_p M w (mu M w v tau'))); assumption.

@@ -40,7 +40,7 @@ Syntax.vo: Syntax.v
 	coqc Syntax.v
 
 clean:
-	rm -f *.vo *.glob focale-coq.tar.gz
+	rm -f *.vo *.glob *.tar.gz
 
 doc: Syntax.tex Model.tex ProofSystem.tex
 
@@ -55,6 +55,6 @@ ProofSystem.tex: ProofSystem.vo ProofSystem.v
 
 dist: clean
 	cd ..; \
-	tar czf focale-coq.tar.gz focale-coq; \
-	mv focale-coq.tar.gz focale-coq; \
-	cd focale-coq
+	tar czf focal.tar.gz focal/*.v focal/README focal/Makefile; \
+	mv focal.tar.gz focal; \
+	cd focal
